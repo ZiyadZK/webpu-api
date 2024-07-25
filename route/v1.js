@@ -3,8 +3,8 @@ const multer = require("multer");
 const path = require('path')
 const fs = require('fs');
 const { validateFileType, validateBody } = require("../middleware");
-const { F_Akun_getAll, F_Akun_get_userdata } = require("../database/functions/F_Akun");
-const { encryptKey } = require("../libs/crypto");
+const { F_Akun_getAll, F_Akun_get_userdata, F_Akun_verify_userdata } = require("../database/functions/F_Akun");
+const { encryptKey, decryptKey } = require("../libs/crypto");
 
 // --------------- KONFIGURASI UPLOAD ---------------------- //
 const storage = multer.diskStorage({
@@ -184,7 +184,45 @@ const route_v1 = Router()
 })
 
 // VERIFY USERDATA
+.post('/v1/verify/userdata', validateBody, async (req, res) => {
+    try {
 
+        const token = await req.body.token
+
+        const responseEncrypt = await decryptKey(token)
+
+        if(!responseEncrypt.success) {
+            return res.status(400).json({
+                message: responseEncrypt.message
+            })
+        }
+
+        const response = await F_Akun_verify_userdata(responseEncrypt.data)
+
+        if(!response.success) {
+            return res.status(200).json({
+                data: {
+                    valid: false,
+                    message: response.message
+                },
+            })
+        }
+
+        return res.status(200).json({
+            data: {
+                valid: true,
+                message: response.message
+            },
+        })
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            debug: error
+        })
+    }
+})
 
 
 module.exports = route_v1

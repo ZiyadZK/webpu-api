@@ -7,7 +7,7 @@ const db = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.D
     timezone: '+07:00'
 })
 
-db.sync({ alter: true })
+db.sync()
 
 module.exports = db
 
