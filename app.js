@@ -6,6 +6,7 @@ const { validateApiKey } = require('./middleware')
 const dotenv = require('dotenv').config()
 const cors = require('cors')
 const route_v1 = require('./route/v1')
+const route_public = require('./route/public')
 
 const app = express()
 
@@ -28,6 +29,7 @@ app.use(express.urlencoded({ extended: true }))
 const port = process.env.PORT || 8080
 
 app.use('/home', validateApiKey, route_v1)
+app.use('/home_public', route_public)
 
 app.use((req, res, next) => {
     res.status(404).json({

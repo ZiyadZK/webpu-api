@@ -13,3 +13,25 @@ exports.api_get = async (url = '/', base_url = process.env.BASE_URL) => {
         })
     })
 }
+
+exports.api_put = async (payload = {}, url = '/', base_url = process.env.BASE_URL) => {
+    try {
+        const response = await axios.put(`${base_url}${url}`, payload, {
+            headers: {
+                'X-API-KEY': process.env.API_KEY
+            }
+        })
+
+        return {
+            success: true,
+            ...response?.data
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: error.response?.data,
+            debug: error
+        }
+    }
+}

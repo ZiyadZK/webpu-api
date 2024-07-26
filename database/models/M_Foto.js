@@ -12,6 +12,10 @@ const M_Foto = db.define('data_foto', {
         autoIncrement: true,
         primaryKey: true
     },
+    nama_file: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     kategori: {
         type: DataTypes.STRING(100),
         allowNull: true
