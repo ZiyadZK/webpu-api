@@ -5,8 +5,8 @@ const fs = require('fs');
 const { validateFileType, validateBody } = require("../middleware");
 const { F_Akun_getAll, F_Akun_get_userdata, F_Akun_verify_userdata } = require("../database/functions/F_Akun");
 const { encryptKey, decryptKey } = require("../libs/crypto");
-const { F_Tenaga_Kerja_getAll, F_Tenaga_Kerja_create, F_Tenaga_Kerja_update_home, F_Tenaga_Kerja_delete, F_Tenaga_Kerja_update_simak } = require("../database/functions/F_Tenaga_Kerja");
-const { F_Foto_getAll, F_Foto_get_by_Kategori_and_ID } = require("../database/functions/F_Foto");
+const { F_Tenaga_Kerja_getAll, F_Tenaga_Kerja_create, F_Tenaga_Kerja_update_home, F_Tenaga_Kerja_delete, F_Tenaga_Kerja_update_simak, F_Tenaga_Kerja_assign_foto_profil } = require("../database/functions/F_Tenaga_Kerja");
+const { F_Foto_getAll, F_Foto_get_by_Kategori_and_ID, F_Foto_create } = require("../database/functions/F_Foto");
 
 // --------------- KONFIGURASI UPLOAD ---------------------- //
 const storage = multer.diskStorage({
@@ -142,7 +142,9 @@ const route_v1 = Router()
 
 .post('/v1/data/foto', async (req, res) => {
     try {
-        upload.single('image')(req, res, (error) => {
+        upload.single('image')(req, res, async (error) => {
+            
+
             if(error) {
                 return res.status(400).json({
                     message: error.message,
@@ -157,6 +159,47 @@ const route_v1 = Router()
                 })
             }
 
+            const body = await req.body
+            const fileName = req.file.filename
+            const fileExtension = path.extname(req.file.originalname)
+
+            let response = {
+                success: false,
+                message: 'Terdapat kesalahan dalam memproses data'
+            }
+
+            let payload = {
+                nama_file: fileName.split('.')[0],
+                tipe: fileExtension,
+                kategori: body['kategori']
+            }
+
+            if(Object.keys(body).includes('fk_foto_id_tenaga_kerja')) {
+                payload['fk_foto_id_tenaga_kerja'] = body['fk_foto_id_tenaga_kerja']
+            }
+
+            if(Object.keys(body).includes('fk_berita_id_berita')) {
+                payload['fk_berita_id_berita'] = body['fk_berita_id_berita']
+            }
+
+            if(Object.keys(body).includes('fk_jurusan_id_jurusan')) {
+                payload['fk_jurusan_id_jurusan'] = body['fk_jurusan_id_jurusan']
+            }
+
+            if(Object.keys(body).includes('fk_ekskul_id_ekskul')) {
+                payload['fk_ekskul_id_ekskul'] = body['fk_ekskul_id_ekskul']
+            }
+
+            if(Object.keys(body).includes('fk_lulusan_id_lulusan_siswa')) {
+                payload['fk_lulusan_id_lulusan_siswa'] = body['fk_lulusan_id_lulusan_siswa']
+            }
+
+            if(!response.success) {
+                return res.status(500).json({
+                    message: response.message
+                })
+            }
+            
             return res.status(200).json({
                 message: 'File berhasil diupload'
             })
@@ -197,6 +240,60 @@ const route_v1 = Router()
 })
 
 // TENAGA KERJA
+.post('/v1/data/foto_profil_tenaga_kerja', async (req, res) => {
+    try {
+        upload.single('image')(req, res, async (error) => {
+            if(error) {
+                return res.status(400).json({
+                    message: error.message,
+                    tipe: 'CLIENT ERROR'
+                })
+            }
+
+            if(!req.file) {
+                return res.status(404).json({
+                    message: 'File tidak ada',
+                    tipe: 'CLIENT ERROR'
+                })
+            }
+
+            const body = await req.body
+            const fileName = req.file.filename
+            const fileExtension = path.extname(req.file.originalname)
+
+            let response = {
+                success: false,
+                message: 'Terdapat kesalahan dalam memproses data'
+            }
+
+            let payload = {
+                nama_file: fileName.split('.')[0],
+                tipe: fileExtension,
+                kategori: body['kategori'],
+                fk_foto_id_tenaga_kerja: body['fk_foto_id_tenaga_kerja']
+            }
+
+            response = await F_Tenaga_Kerja_assign_foto_profil(payload)
+
+            if(!response.success) {
+                return res.status(500).json({
+                    message: response.message
+                })
+            }
+            
+            return res.status(200).json({
+                message: 'File berhasil diupload'
+            })
+        })
+    } catch (error) {
+        console.log({error})
+        return res.status(500).json({
+            message: 'Terdapat error saat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER',
+            debug: error
+        })
+    }
+})
 .get('/v1/data/tenaga_kerja', async (req, res) => {
     try {
         

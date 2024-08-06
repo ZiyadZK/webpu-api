@@ -1,9 +1,9 @@
 const { Op } = require("sequelize")
 const M_Tenaga_Kerja = require("../models/M_Tenaga_Kerja")
-const { default: axios } = require("axios")
 const { api_put, api_get } = require("../../libs/services")
 const M_Foto = require("../models/M_Foto")
-const M_Ekskul = require("../models/M_Ekskul")
+const fs = require('fs')
+const path = require('path')
 
 exports.F_Tenaga_Kerja_getAll = async (parameter) => {
     try {
@@ -43,7 +43,6 @@ exports.F_Tenaga_Kerja_getAll = async (parameter) => {
 
         let updatedData = []
         if(dataTenagaKerja.length > 0 ) {
-            console.log(dataTenagaKerja)
             dataTenagaKerja = dataTenagaKerja.map(value => {
                 const dataPegawai = responsePegawai.data.find(v => v['id_pegawai'] === value['id_pegawai'])
 
@@ -53,6 +52,7 @@ exports.F_Tenaga_Kerja_getAll = async (parameter) => {
                         id_pegawai: value['id_pegawai'],
                         password: value['password'],
                         role: value['role'],
+                        quotes: value['quotes'],
                         aktif: value['aktif'] === 1,
                         nama_pegawai: dataPegawai['nama_pegawai'],
                         email_pegawai: dataPegawai['email_pegawai'],
@@ -218,6 +218,50 @@ exports.F_Tenaga_Kerja_delete = async (id_tenaga_kerja) => {
         return {
             success: true,
             message: 'Berhasil mengubah data tenaga kerja'
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: error.message,
+            debug: error
+        }
+    }
+}
+
+exports.F_Tenaga_Kerja_assign_foto_profil = async (payload) => {
+    try {
+
+        const dataFotoExist = await M_Foto.findOne({
+            raw: true,
+            where: {
+                kategori: 'foto_profil',
+                fk_foto_id_tenaga_kerja: payload['fk_foto_id_tenaga_kerja']
+            }
+        })
+
+        if(dataFotoExist) {
+            const filePath = path.join(__dirname, '../../public/foto', `${dataFotoExist['nama_file']}${dataFotoExist['tipe']}`)
+
+            if(fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath)
+            }
+
+            await M_Foto.update({
+                nama_file: payload['nama_file'],
+                tipe: payload['tipe']
+            }, {
+                where: {
+                    kategori: 'foto_profil',
+                    fk_foto_id_tenaga_kerja: payload['fk_foto_id_tenaga_kerja']
+                }
+            })
+        }else{
+            await M_Foto.create(payload)
+        }
+
+        return {
+            success: true
         }
     } catch (error) {
         console.log(error)

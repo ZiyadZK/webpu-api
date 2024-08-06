@@ -6,7 +6,8 @@ const M_Foto = require("../models/M_Foto")
 const M_Jurusan = require("../models/M_Jurusan")
 const M_Lulusan_Siswa = require("../models/M_Lulusan_Siswa")
 const M_Tenaga_Kerja = require("../models/M_Tenaga_Kerja")
-const { F_Tenaga_Kerja_simak_get_single } = require("./F_Tenaga_Kerja")
+const fs = require('fs')
+const path = require('path')
 
 exports.F_Foto_getAll = async (parameter) => {
     try {
@@ -235,6 +236,23 @@ exports.F_Foto_get_by_Kategori_and_ID = async (kategori, id) => {
             data
         }
 
+    } catch (error) {
+        console.log(error)
+        return {
+            success: false,
+            message: error.message,
+            debug: error
+        }
+    }
+}
+
+exports.F_Foto_create = async (payload) => {
+    try {
+        await M_Foto.create(payload)
+
+        return {
+            success: true
+        }
     } catch (error) {
         console.log(error)
         return {

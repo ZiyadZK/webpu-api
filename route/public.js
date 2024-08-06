@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const path = require('path')
+const fs = require('fs')
 
 const route_public = Router()
 
@@ -7,7 +8,20 @@ const route_public = Router()
     try {
         const nama_file = req.params.nama_file
 
-        return res.status(200).sendFile(path.join(__dirname, '../public', 'foto', nama_file), (error) => {
+        const filePath = path.join(__dirname, '../public', 'foto', nama_file)
+
+        if(!fs.existsSync(filePath)) {
+            return res.status(200).sendFile(path.join(__dirname, '../public', 'foto', 'no-photo-profil.png'), (error) => {
+                if(error) {
+                    return res.status(error.statusCode).json({
+                        message: 'Foto tidak ditemukan'
+                    })
+                }
+            })
+        }
+
+
+        return res.status(200).sendFile(filePath, (error) => {
             if(error) {
                 return res.status(error.statusCode).json({
                     message: 'Foto tidak ditemukan'
