@@ -40,8 +40,7 @@ const M_Tenaga_Kerja = db.define('data_tenaga_kerja', {
     ]
 })
 
-M_Tenaga_Kerja.hasMany(M_Foto, { foreignKey: 'fk_foto_id_tenaga_kerja', sourceKey: 'id_tenaga_kerja', as: 'foto_tenaga_kerja' })
-M_Foto.belongsTo(M_Tenaga_Kerja, { foreignKey: 'fk_foto_id_tenaga_kerja', targetKey: 'id_tenaga_kerja' })
+
 
 M_Tenaga_Kerja.hasMany(M_Ekskul, { foreignKey: 'fk_penanggung_jawab_id_tenaga_kerja', sourceKey: 'id_tenaga_kerja', as: 'penanggung_jawab' })
 M_Ekskul.belongsTo(M_Tenaga_Kerja, { foreignKey: 'fk_penanggung_jawab_id_tenaga_kerja', targetKey: 'id_tenaga_kerja'})

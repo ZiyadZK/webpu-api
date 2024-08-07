@@ -7,6 +7,7 @@ const { F_Akun_getAll, F_Akun_get_userdata, F_Akun_verify_userdata } = require("
 const { encryptKey, decryptKey } = require("../libs/crypto");
 const { F_Tenaga_Kerja_getAll, F_Tenaga_Kerja_create, F_Tenaga_Kerja_update_home, F_Tenaga_Kerja_delete, F_Tenaga_Kerja_update_simak, F_Tenaga_Kerja_assign_foto_profil } = require("../database/functions/F_Tenaga_Kerja");
 const { F_Foto_getAll, F_Foto_get_by_Kategori_and_ID, F_Foto_create } = require("../database/functions/F_Foto");
+const { F_Detail_Tenaga_Kerja_getAll } = require("../database/functions/F_Detail_Tenaga_Kerja");
 
 // --------------- KONFIGURASI UPLOAD ---------------------- //
 const storage = multer.diskStorage({
@@ -429,6 +430,32 @@ const route_v1 = Router()
     }
 })
 
+// DETAIL TENAGA KERJA
+.get('/v1/data/detail_tenaga_kerja_all/:id_pegawai', async (req, res) => {
+    try {
+        
+        const id_pegawai = req.params.id_pegawai
+
+        const response = await F_Detail_Tenaga_Kerja_getAll(id_pegawai)
+
+        if(!response.success) {
+            return res.status(500).json({
+                message: response.message
+            })
+        }
+
+        return res.status(200).json({
+            data: response.data
+        })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            debug: error
+        })
+    }
+})
 
 // USERDATA BUAT LOGIN
 .post('/v1/data/userdata', validateBody, async (req, res) => {
@@ -486,7 +513,8 @@ const route_v1 = Router()
             return res.status(200).json({
                 data: {
                     valid: false,
-                    message: response.message
+                    message: response.message,
+                    data: response?.data
                 },
             })
         }
@@ -494,7 +522,8 @@ const route_v1 = Router()
         return res.status(200).json({
             data: {
                 valid: true,
-                message: response.message
+                message: response.message,
+                data: response?.data
             },
         })
         

@@ -1,5 +1,8 @@
+const { encryptKey } = require("../../libs/crypto")
 const { api_get } = require("../../libs/services")
+const M_Foto = require("../models/M_Foto")
 const M_Tenaga_Kerja = require("../models/M_Tenaga_Kerja")
+const { F_Tenaga_Kerja_getAll } = require("./F_Tenaga_Kerja")
 
 exports.F_Akun_getAll = async () => {
     try {
@@ -69,12 +72,25 @@ exports.F_Akun_get_userdata = async (email, password) => {
             }
         }
 
+        // const responseTenagaKerja = await F_Tenaga_Kerja_getAll({
+        //     id_pegawai: dataPegawai['id_pegawai'],
+        //     password
+        // })
+
+        // console.log(responseTenagaKerja)
+
         const dataTenagaKerja = await M_Tenaga_Kerja.findOne({
             raw: true,
             where: {
                 id_pegawai: dataPegawai['id_pegawai'],
                 password
-            }
+            },
+            include: [
+                {
+                    model: M_Foto,
+                    as: 'foto_tenaga_kerja'
+                }
+            ]
         })
 
         if(!dataTenagaKerja) {
@@ -84,6 +100,19 @@ exports.F_Akun_get_userdata = async (email, password) => {
             }
         }
 
+        // return {
+        //     success: true,
+        //     data: {
+        //         id_tenaga_kerja: dataTenagaKerja['id_tenaga_kerja'],
+        //         id_pegawai: dataTenagaKerja['id_pegawai'],
+        //         password: dataTenagaKerja['password'],
+        //         role: dataTenagaKerja['role'],
+        //         nama_pegawai: dataPegawai['nama_pegawai'],
+        //         email_pegawai: dataPegawai['email_pegawai'],
+
+        //     }
+        // }
+
         return {
             success: true,
             data: {
@@ -92,7 +121,16 @@ exports.F_Akun_get_userdata = async (email, password) => {
                 password: dataTenagaKerja['password'],
                 role: dataTenagaKerja['role'],
                 nama_pegawai: dataPegawai['nama_pegawai'],
-                email_pegawai: dataPegawai['email_pegawai']
+                email_pegawai: dataPegawai['email_pegawai'],
+                foto_profil: dataTenagaKerja['foto_tenaga_kerja.fk_foto_id_tenaga_kerja'] !== null ? {
+                    id_foto: dataTenagaKerja['foto_tenaga_kerja.id_foto'],
+                    nama_file: dataTenagaKerja['foto_tenaga_kerja.nama_file'],
+                    tipe: dataTenagaKerja['foto_tenaga_kerja.tipe']
+                } : {
+                    id_foto: null,
+                    nama_file: 'no-photo-profil',
+                    tipe: '.png'
+                }
             }
         }
     } catch (error) {
@@ -121,7 +159,13 @@ exports.F_Akun_verify_userdata = async (userdata) => {
             raw: true,
             where: {
                 id_tenaga_kerja: userdata['id_tenaga_kerja']
-            }
+            },
+            include: [
+                {
+                    model: M_Foto,
+                    as: 'foto_tenaga_kerja'
+                }
+            ]
         })
 
         if(!dataTenagaKerja) {
@@ -140,31 +184,85 @@ exports.F_Akun_verify_userdata = async (userdata) => {
             }
         }
 
-        if(userdata['password'] !== dataTenagaKerja['password']) {
+        const updatedDataTenagaKerja = {
+            id_tenaga_kerja: dataTenagaKerja['id_tenaga_kerja'],
+            id_pegawai: dataTenagaKerja['id_pegawai'],
+            password: dataTenagaKerja['password'],
+            role: dataTenagaKerja['role'],
+            nama_pegawai: dataPegawai['nama_pegawai'],
+            email_pegawai: dataPegawai['email_pegawai'],
+            foto_profil: dataTenagaKerja['foto_tenaga_kerja.fk_foto_id_tenaga_kerja'] !== null ? {
+                id_foto: dataTenagaKerja['foto_tenaga_kerja.id_foto'],
+                nama_file: dataTenagaKerja['foto_tenaga_kerja.nama_file'],
+                tipe: dataTenagaKerja['foto_tenaga_kerja.tipe']
+            } : {
+                id_foto: null,
+                nama_file: 'no-photo-profil',
+                tipe: '.png'
+            }
+        }
+
+        console.log({
+            userdata,
+            updatedDataTenagaKerja
+        })
+
+        if(userdata['password'] !== updatedDataTenagaKerja['password']) {
             return {
                 success: false,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!'
             }
         }
 
-        if(userdata['role'] !== dataTenagaKerja['role']) {
+        if(userdata['role'] !== updatedDataTenagaKerja['role']) {
+            const responseToken = await encryptKey(updatedDataTenagaKerja)
+            return {
+                success: false,
+                message: 'Terdapat ketidakcocokan terhadap userdata anda!',
+                data: responseToken.data
+            }
+        }
+
+        if(userdata['nama_pegawai'] !== updatedDataTenagaKerja['nama_pegawai']) {
+            const responseToken = await encryptKey(updatedDataTenagaKerja)
+            return {
+                success: false,
+                message: 'Terdapat ketidakcocokan terhadap userdata anda!',
+                data: responseToken.data
+            }
+        }
+
+        if(userdata['email_pegawai'] !== updatedDataTenagaKerja['email_pegawai']) {
             return {
                 success: false,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!'
             }
         }
 
-        if(userdata['nama_pegawai'] !== dataPegawai['nama_pegawai']) {
+        if(userdata['foto_profil']['id_foto'] !== updatedDataTenagaKerja['foto_profil']['id_foto']) {
+            const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
                 success: false,
-                message: 'Terdapat ketidakcocokan terhadap userdata anda!'
+                message: 'Terdapat ketidakcocokan terhadap userdata anda!',
+                data: responseToken.data
             }
         }
 
-        if(userdata['email_pegawai'] !== dataPegawai['email_pegawai']) {
+        if(userdata['foto_profil']['nama_file'] !== updatedDataTenagaKerja['foto_profil']['nama_file']) {
+            const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
                 success: false,
-                message: 'Terdapat ketidakcocokan terhadap userdata anda!'
+                message: 'Terdapat ketidakcocokan terhadap userdata anda!',
+                data: responseToken.data
+            }
+        }
+
+        if(userdata['foto_profil']['tipe'] !== updatedDataTenagaKerja['foto_profil']['tipe']) {
+            const responseToken = await encryptKey(updatedDataTenagaKerja)
+            return {
+                success: false,
+                message: 'Terdapat ketidakcocokan terhadap userdata anda!',
+                data: responseToken.data
             }
         }
 
