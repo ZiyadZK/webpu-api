@@ -56,6 +56,8 @@ exports.F_Tenaga_Kerja_getAll = async (parameter) => {
                         aktif: value['aktif'] === 1,
                         nama_pegawai: dataPegawai['nama_pegawai'],
                         email_pegawai: dataPegawai['email_pegawai'],
+                        jabatan: dataPegawai['jabatan'],
+                        status_kepegawaian: dataPegawai['status_kepegawaian'],
                         foto_profil: value['foto_tenaga_kerja.id_foto'] !== null ? {
                             id_foto: value['foto_tenaga_kerja.id_foto'],
                             nama_file: value['foto_tenaga_kerja.nama_file'],

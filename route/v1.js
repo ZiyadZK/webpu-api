@@ -472,6 +472,12 @@ const route_v1 = Router()
             })
         }
 
+        if(!response.data.aktif) {
+            return res.status(500).json({
+                message: 'Akun anda tidak aktif, silahkan hubungi Administrator untuk mengaktifkannya kembali.'
+            })
+        }
+
         const responseEncrypt = await encryptKey(response.data)
 
         if(!responseEncrypt.success) {

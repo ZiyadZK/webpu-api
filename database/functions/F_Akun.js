@@ -120,6 +120,7 @@ exports.F_Akun_get_userdata = async (email, password) => {
                 id_pegawai: dataTenagaKerja['id_pegawai'],
                 password: dataTenagaKerja['password'],
                 role: dataTenagaKerja['role'],
+                aktif: dataTenagaKerja['aktif'],
                 nama_pegawai: dataPegawai['nama_pegawai'],
                 email_pegawai: dataPegawai['email_pegawai'],
                 foto_profil: dataTenagaKerja['foto_tenaga_kerja.fk_foto_id_tenaga_kerja'] !== null ? {
@@ -189,6 +190,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
             id_pegawai: dataTenagaKerja['id_pegawai'],
             password: dataTenagaKerja['password'],
             role: dataTenagaKerja['role'],
+            aktif: dataTenagaKerja['aktif'],
             nama_pegawai: dataPegawai['nama_pegawai'],
             email_pegawai: dataPegawai['email_pegawai'],
             foto_profil: dataTenagaKerja['foto_tenaga_kerja.fk_foto_id_tenaga_kerja'] !== null ? {
@@ -202,10 +204,13 @@ exports.F_Akun_verify_userdata = async (userdata) => {
             }
         }
 
-        console.log({
-            userdata,
-            updatedDataTenagaKerja
-        })
+        if(!updatedDataTenagaKerja['aktif']) {
+            return {
+                success: false,
+                message: 'Akun anda tidak aktif, silahkan hubungi Administrator'
+            }
+        }
+
 
         if(userdata['password'] !== updatedDataTenagaKerja['password']) {
             return {
@@ -217,7 +222,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
         if(userdata['role'] !== updatedDataTenagaKerja['role']) {
             const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
-                success: false,
+                success: true,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!',
                 data: responseToken.data
             }
@@ -226,7 +231,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
         if(userdata['nama_pegawai'] !== updatedDataTenagaKerja['nama_pegawai']) {
             const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
-                success: false,
+                success: true,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!',
                 data: responseToken.data
             }
@@ -242,7 +247,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
         if(userdata['foto_profil']['id_foto'] !== updatedDataTenagaKerja['foto_profil']['id_foto']) {
             const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
-                success: false,
+                success: true,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!',
                 data: responseToken.data
             }
@@ -251,7 +256,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
         if(userdata['foto_profil']['nama_file'] !== updatedDataTenagaKerja['foto_profil']['nama_file']) {
             const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
-                success: false,
+                success: true,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!',
                 data: responseToken.data
             }
@@ -260,7 +265,7 @@ exports.F_Akun_verify_userdata = async (userdata) => {
         if(userdata['foto_profil']['tipe'] !== updatedDataTenagaKerja['foto_profil']['tipe']) {
             const responseToken = await encryptKey(updatedDataTenagaKerja)
             return {
-                success: false,
+                success: true,
                 message: 'Terdapat ketidakcocokan terhadap userdata anda!',
                 data: responseToken.data
             }
