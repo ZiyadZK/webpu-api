@@ -8,6 +8,7 @@ const { encryptKey, decryptKey } = require("../libs/crypto");
 const { F_Tenaga_Kerja_getAll, F_Tenaga_Kerja_create, F_Tenaga_Kerja_update_home, F_Tenaga_Kerja_delete, F_Tenaga_Kerja_update_simak, F_Tenaga_Kerja_assign_foto_profil } = require("../database/functions/F_Tenaga_Kerja");
 const { F_Foto_getAll, F_Foto_get_by_Kategori_and_ID, F_Foto_create } = require("../database/functions/F_Foto");
 const { F_Detail_Tenaga_Kerja_getAll } = require("../database/functions/F_Detail_Tenaga_Kerja");
+const { F_Jurusan_getAll, F_Jurusan_create, F_Jurusan_update, F_Jurusan_delete, F_Jurusan_assign_kegiatan, F_Jurusan_delete_kegiatan } = require("../database/functions/F_Jurusan");
 
 // --------------- KONFIGURASI UPLOAD ---------------------- //
 const storage = multer.diskStorage({
@@ -542,5 +543,176 @@ const route_v1 = Router()
     }
 })
 
+// JURUSAN
+.get('/v1/data/jurusan', async (req, res) => {
+    try {
+        const response = await F_Jurusan_getAll()
+
+        if(!response.success) {
+            return res.status(500).json({
+                message: response.message
+            })
+        }
+
+        return res.status(200).json({
+            data: response.data
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            debug: error
+        })
+    }
+})
+
+.post('/v1/data/jurusan', validateBody, async (req, res) => {
+    try {
+        const payload = await req.body
+
+        const response = await F_Jurusan_create(payload)
+
+        if(!response.success) {
+            return res.status(500).json({
+                tipe: 'DATABASE ERROR',
+                message: response.message,
+                debug: response.debug
+            })
+        }
+
+        return res.status(200).json({
+            message: 'Berhasil membuat jurusan baru'
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER ERROR',
+            debug: error
+        })
+    }
+})
+
+.put('/v1/data/jurusan', validateBody, async (req, res) => {
+    try {
+        const payload = await req.body.payload
+        const id_jurusan = await req.body.id_jurusan
+
+        const response = await F_Jurusan_update(id_jurusan, payload)
+
+        return res.status(response.success ? 200 : 500).json({
+            data: response?.data,
+            message: response?.message,
+            debug: response?.debug
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER ERROR',
+            debug: error
+        })
+    }
+})
+
+.delete('/v1/data/jurusan', validateBody, async (req, res) => {
+    try {
+        const id_jurusan = await req.body.id_jurusan
+
+        const response = await F_Jurusan_delete(id_jurusan)
+
+        return res.status(response.success ? 200 : 500).json({
+            data: response?.data,
+            message: response?.message,
+            debug: response?.debug
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            message: 'Terdapat error disaat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER ERROR',
+            debug: error
+        })
+    }
+})
+
+.post('/v1/data/kegiatan_jurusan',  async (req, res) => {
+    try {
+        upload.single('image')(req, res, async (error) => {
+            if(error) {
+                return res.status(400).json({
+                    message: error.message,
+                    tipe: 'CLIENT ERROR'
+                })
+            }
+
+            if(!req.file) {
+                return res.status(404).json({
+                    message: 'File tidak ada',
+                    tipe: 'CLIENT ERROR'
+                })
+            }
+
+            const body = await req.body
+            const fileName = req.file.filename
+            const fileExtension = path.extname(req.file.originalname)
+
+            let response = {
+                success: false,
+                message: 'Terdapat kesalahan dalam memproses data'
+            }
+
+            let payload = {
+                nama_file: fileName.split('.')[0],
+                tipe: fileExtension,
+                kategori: body['kategori'],
+                fk_jurusan_id_jurusan: body['fk_jurusan_id_jurusan']
+            }
+
+            response = await F_Jurusan_assign_kegiatan(payload)
+
+            if(!response.success) {
+                return res.status(500).json({
+                    message: response.message
+                })
+            }
+            
+            return res.status(200).json({
+                message: 'File berhasil diupload'
+            })
+        })
+    } catch (error) {
+        console.log({error})
+        return res.status(500).json({
+            message: 'Terdapat error saat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER',
+            debug: error
+        })
+    }
+})
+
+.delete('/v1/data/kegiatan_jurusan', validateBody, async (req, res) => {
+    try {
+        const id_foto = await req.body.id_foto
+        const nama_foto = await req.body.nama_foto
+        const tipe = await req.body.tipe
+
+        const response = await F_Jurusan_delete_kegiatan(id_foto, nama_foto, tipe)
+
+        return res.status(response.success ? 200 : 500).json({
+            data: response?.data,
+            message: response?.message,
+            debug: response?.debug
+        })
+
+    } catch (error) {
+        console.log({error})
+        return res.status(500).json({
+            message: 'Terdapat error saat memproses data, hubungi Administrator',
+            tipe: 'INTERNAL SERVER',
+            debug: error
+        })
+    }
+})
 
 module.exports = route_v1

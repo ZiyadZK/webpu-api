@@ -11,7 +11,7 @@ const route_public = Router()
         const filePath = path.join(__dirname, '../public', 'foto', nama_file)
 
         if(!fs.existsSync(filePath)) {
-            return res.status(200).sendFile(path.join(__dirname, '../public', 'foto', 'no-photo-profil.png'), (error) => {
+            return res.status(200).sendFile(path.join(__dirname, '../public', 'foto', 'no-image.png'), (error) => {
                 if(error) {
                     return res.status(error.statusCode).json({
                         message: 'Foto tidak ditemukan'

@@ -7,6 +7,10 @@ const M_Jurusan = db.define('data_jurusan', {
         primaryKey: true,
         autoIncrement: true
     },
+    warna: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
     nama: {
         type: DataTypes.STRING(100),
         allowNull: true
